@@ -47,6 +47,7 @@ LegislationIntroduced <- read_xml('http://wslwebservices.leg.wa.gov/LegislationS
 LegislationIntroducedDf <- LegislationIntroduced %>% as_list() %>% .[[1]] %>%
   map_dfr(function(leg) {
     BillNumber <- leg$BillNumber[[1]]
+    BillId <- leg$BillId[[1]]
     LongDescription <- leg$LongDescription
     if (!is.null(LongDescription) && length(LongDescription)==1) {
       LongDescription <- LongDescription[[1]]
@@ -58,6 +59,12 @@ LegislationIntroducedDf <- LegislationIntroduced %>% as_list() %>% .[[1]] %>%
       ShortDescription <- ShortDescription[[1]]
     } else {
       ShortDescription <- NA_character_
+    }
+    PrimeSponsorID <- leg$PrimeSponsorID
+    if (!is.null(PrimeSponsorID) && length(PrimeSponsorID)==1) {
+      PrimeSponsorID <- PrimeSponsorID[[1]] %>% as.integer()
+    } else {
+      PrimeSponsorID <- NA_integer_
     }
     CurrentStatus <- NA_character_
     CurrentStatusDescription <- NA_character_
@@ -79,8 +86,18 @@ LegislationIntroducedDf <- LegislationIntroduced %>% as_list() %>% .[[1]] %>%
       approps=='true' ~ TRUE,
       TRUE ~ FALSE
     )
-    tibble(BillId=leg$BillId[[1]], BillNumber=BillNumber, ShortDescription=ShortDescription, Chamber=leg$OriginalAgency[[1]], Appropriations=approps,
-           LongDescription=LongDescription, StatusDate=as_date(ymd_hms(leg$CurrentStatus$ActionDate[[1]])), CurrentStatus=CurrentStatus, CurrentStatusDescription=CurrentStatusDescription)
+    companionBillId <- NA_character_
+    companions <- leg$Companions
+    if (length(companions)==1) {
+      companion <- companions$Companion
+      if (biennium==companion$Biennium[[1]]) {
+        companionBillId <- companion$BillId[[1]]
+      }
+    }
+    
+    tibble(BillId=leg$BillId[[1]], BillNumber=BillNumber, ShortDescription=ShortDescription, Chamber=leg$OriginalAgency[[1]], PrimeSponsorID=PrimeSponsorID, Appropriations=approps,
+           LongDescription=LongDescription, StatusDate=as_date(ymd_hms(leg$CurrentStatus$ActionDate[[1]])), CurrentStatus=CurrentStatus, CurrentStatusDescription=CurrentStatusDescription,
+           CompanionBillId=companionBillId)
   })
 
 # upload to data.world

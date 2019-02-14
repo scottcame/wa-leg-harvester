@@ -186,6 +186,7 @@ houseMemberIdMap <- tribble(
 )
 
 Members <- senateMembers %>% left_join(senateMemberIdMap, by=c('MatchLast'='Last')) %>% select(-MatchLast) %>% mutate(Chamber='Senate') %>%
-  bind_rows(houseMembers %>% left_join(houseMemberIdMap, by=c('MemberLast'='Last')) %>% mutate(Chamber='House'))
+  bind_rows(houseMembers %>% left_join(houseMemberIdMap, by=c('MemberLast'='Last')) %>% mutate(Chamber='House')) %>%
+  mutate_if(is.character, trimws) %>% mutate_at(vars(ID, District), as.integer)
 
 rm(senateMemberIdMap, houseMemberIdMap, senateMembers, houseMembers)
