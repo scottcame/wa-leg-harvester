@@ -303,7 +303,7 @@ tabulateVotes <- function(voteDf) {
     arrange(desc(VoteDate))
 }
 
-downloadData()
+downloadData('2020')
 
 # Look at the votes
 latestDate <- max(RollCalls$VoteDate)
